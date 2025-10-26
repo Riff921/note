@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rifki - Pencatat Kegiatan</title>
+    <meta name="description" content="Aplikasi pencatat kegiatan pribadi Rifki">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIlJpZmtpIEFsIEF6aGFyaSAtIFBlbmNhdGF0IEtlZ2lhdGFuIiwKICAic2hvcnRfbmFtZSI6ICJSaWZraSBBbCBBemhhcmkiLAogICJkZXNjcmlwdGlvbiI6ICJBcGxpa2FzaSBwZW5jYXRhdCBrZWdpYXRhbiBwcmliYWRpIFJpZmtpIEFsIEF6aGFyaSIsCiAgInN0YXJ0X3VybCI6ICIvIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjZjlmYWZiIiwKICAidGhlbWVfY29sb3IiOiAiIzI1NjNlYiIsCiAgImljb25zIjogWwogICAgewogICAgICAic3JjIjogImh0dHBzOi8vaWlsaS5pby9LNEo4ZlpOLmpwZyIsCiAgICAgICJzaXplcyI6ICIxOTJ4MTkyIiwKICAgICAgInR5cGUiOiAiaW1hZ2UvanBlZyIsCiAgICAgICJwdXJwb3NlIjogImFueSBtYXNrYWJsZSIKICAgIH0sCiAgICB7CiAgICAgICJzcmMiOiAiaHR0cHM6Ly9paWxpLmlvL0s0SjhmWk4uanBnIiwKICAgICAgInNpemVzIjogIjUxMng1MTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9qcGVnIiwKICAgICAgInB1cnBvc2UiOiAiYW55IG1hc2thYmxlIgogICAgfQogIF0KfQ==">
+    <link rel="apple-touch-icon" href="https://iili.io/K4J8fZN.jpg">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Rifki">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            box-sizing: border-box;
+        }
+        
+        .activity-done {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body class="h-full bg-gray-50">
+    <div class="min-h-full">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b">
+            <div class="max-w-4xl mx-auto px-4 py-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <img src="https://iili.io/K4J8fZN.jpg" alt="Logo Pencatat Kegiatan" class="w-12 h-12 rounded-lg object-cover" onerror="this.src=''; this.alt='Logo gagal dimuat'; this.style.display='none';">
+                        <h1 class="text-3xl font-bold text-gray-900">Rifki</h1>
+                    </div>
+                    <button id="installBtn" class="hidden bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                        📱 Install App
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-4xl mx-auto px-4 py-8">
+
+            <!-- Add Activity Form -->
+            <div class="bg-white rounded-lg shadow-sm border p-6 mb-8">
+                <form id="activityForm" class="space-y-4">
+                    <div>
+                        <input type="text" id="activityTitle" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg" placeholder="Tulis kegiatan baru...">
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors">
+                        Tambah Kegiatan
+                    </button>
+                </form>
+            </div>
+
+
+
+            <!-- Activities List -->
+            <div class="bg-white rounded-lg shadow-sm border p-6">
+                <div id="activitiesList" class="space-y-3">
+                    <!-- Activities will be rendered here -->
+                </div>
+                <div id="emptyState" class="text-center py-12 hidden">
+                    <div class="text-6xl mb-4">📋</div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Belum ada kegiatan</h3>
+                    <p class="text-gray-600">Mulai tambahkan kegiatan pertama Anda!</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+
+
+    <script>
+        class ActivityTracker {
+            constructor() {
+                this.activities = JSON.parse(localStorage.getItem('activities')) || [];
+                this.currentId = parseInt(localStorage.getItem('currentId')) || 1;
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.renderActivities();
+            }
+
+            bindEvents() {
+                document.getElementById('activityForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.addActivity();
+                });
+            }
+
+            addActivity() {
+                const title = document.getElementById('activityTitle').value.trim();
+                if (!title) return;
+
+                const activity = {
+                    id: this.currentId++,
+                    title,
+                    completed: false,
+                    createdAt: new Date().toISOString()
+                };
+
+                this.activities.unshift(activity);
+                this.saveData();
+                this.renderActivities();
+                document.getElementById('activityForm').reset();
+            }
+
+            toggleActivity(id) {
+                const activity = this.activities.find(a => a.id === id);
+                if (activity) {
+                    activity.completed = !activity.completed;
+                    this.saveData();
+                    this.renderActivities();
+                }
+            }
+
+            deleteActivity(id) {
+                this.activities = this.activities.filter(a => a.id !== id);
+                this.saveData();
+                this.renderActivities();
+            }
+
+            renderActivities() {
+                const container = document.getElementById('activitiesList');
+                const emptyState = document.getElementById('emptyState');
+
+                if (this.activities.length === 0) {
+                    container.innerHTML = '';
+                    emptyState.classList.remove('hidden');
+                    return;
+                }
+
+                emptyState.classList.add('hidden');
+                
+                container.innerHTML = this.activities.map(activity => {
+                    return `
+                        <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                            <div class="flex items-center space-x-3">
+                                <input type="checkbox" ${activity.completed ? 'checked' : ''} 
+                                       onchange="app.toggleActivity(${activity.id})"
+                                       class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500">
+                                <span class="text-lg ${activity.completed ? 'activity-done' : ''}">${activity.title}</span>
+                            </div>
+                            <button onclick="app.deleteActivity(${activity.id})" 
+                                    class="text-red-500 hover:text-red-700 text-xl">
+                                ×
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            saveData() {
+                localStorage.setItem('activities', JSON.stringify(this.activities));
+                localStorage.setItem('currentId', this.currentId.toString());
+            }
+        }
+
+        // PWA Installation
+        let deferredPrompt;
+        const installBtn = document.getElementById('installBtn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBtn.classList.remove('hidden');
+        });
+
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    installBtn.classList.add('hidden');
+                }
+                deferredPrompt = null;
+            }
+        });
+
+        window.addEventListener('appinstalled', () => {
+            installBtn.classList.add('hidden');
+        });
+
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                const swCode = `
+                    const CACHE_NAME = 'rifki-activity-tracker-v1';
+                    const urlsToCache = [
+                        '/',
+                        'https://cdn.tailwindcss.com'
+                    ];
+
+                    self.addEventListener('install', (event) => {
+                        event.waitUntil(
+                            caches.open(CACHE_NAME)
+                                .then((cache) => cache.addAll(urlsToCache))
+                        );
+                    });
+
+                    self.addEventListener('fetch', (event) => {
+                        event.respondWith(
+                            caches.match(event.request)
+                                .then((response) => {
+                                    if (response) {
+                                        return response;
+                                    }
+                                    return fetch(event.request);
+                                })
+                        );
+                    });
+
+                    self.addEventListener('activate', (event) => {
+                        event.waitUntil(
+                            caches.keys().then((cacheNames) => {
+                                return Promise.all(
+                                    cacheNames.map((cacheName) => {
+                                        if (cacheName !== CACHE_NAME) {
+                                            return caches.delete(cacheName);
+                                        }
+                                    })
+                                );
+                            })
+                        );
+                    });
+                `;
+
+                const blob = new Blob([swCode], { type: 'application/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+
+                navigator.serviceWorker.register(swUrl)
+                    .then((registration) => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch((registrationError) => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+
+        // Initialize the app
+        const app = new ActivityTracker();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9948411f14dffe08',t:'MTc2MTQ2Mzg5MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
